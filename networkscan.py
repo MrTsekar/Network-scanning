@@ -1,5 +1,6 @@
 from scapy.all import *
 import argparse
+import requests
 
 def scan_network(target_ip):
     # Create an ARP packet with the destination IP address
@@ -55,3 +56,4 @@ for client in scan_results:
     else:
         vendor = ""
     print(f"{client['ip']}\t{mac_address}\t{vendor}")
+
