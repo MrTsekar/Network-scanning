@@ -1,6 +1,7 @@
 from scapy.all import *
 import argparse
 import requests
+import platform
 
 def scan_network(target_ip):
     # Create an ARP packet with the destination IP address
@@ -31,29 +32,33 @@ def get_mac_vendor(mac_address):
     vendor = data.get("vendor", "Unknown")
     return vendor
 
-# Create an argument parser
-parser = argparse.ArgumentParser(description="Network Scanner")
-parser.add_argument("-t", "--target", dest="target", help="Target IP or IP range")
-parser.add_argument("-v", "--verbose", action="store_true", help="Display vendor information")
-args = parser.parse_args()
+if __name__ == "__main__":
+    # Create an argument parser
+    parser = argparse.ArgumentParser(description="Network Scanner")
+    parser.add_argument("-t", "--target", dest="target", help="Target IP or IP range")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Display vendor information")
+    args = parser.parse_args()
 
-# Check if a target IP or range is provided
-if args.target:
-    target_ip = args.target
-else:
-    target_ip = "192.168.1.0/24"  # Default IP range
-
-# Perform network scanning
-scan_results = scan_network(target_ip)
-
-# Print the scan results
-print("IP\t\tMAC Address\tVendor")
-print("-----------------------------------------")
-for client in scan_results:
-    mac_address = client["mac"]
-    if args.verbose:
-        vendor = get_mac_vendor(mac_address)
+    # Check if a target IP or range is provided
+    if args.target:
+        target_ip = args.target
     else:
-        vendor = ""
-    print(f"{client['ip']}\t{mac_address}\t{vendor}")
+        target_ip = "192.168.1.0/24"  # Default IP range
 
+    # Perform network scanning
+    scan_results = scan_network(target_ip)
+
+    # Print OS version and scan results
+    os_info = platform.platform()  # Get OS information
+    print(f"Operating System: {os_info}\n")
+    
+    print("IP\t\tMAC Address\tVendor")
+    print("-----------------------------------------")
+    
+    for client in scan_results:
+        mac_address = client["mac"]
+        if args.verbose:
+            vendor = get_mac_vendor(mac_address)
+        else:
+            vendor = ""
+        print(f"{client['ip']}\t{mac_address}\t{vendor}")
