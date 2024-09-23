@@ -1,7 +1,7 @@
 from scapy.all import *
 import argparse
 import requests
-import platform
+import nmap
 
 def scan_network(target_ip):
     # Create an ARP packet with the destination IP address
@@ -32,6 +32,21 @@ def get_mac_vendor(mac_address):
     vendor = data.get("vendor", "Unknown")
     return vendor
 
+def get_os_info(ip):
+    """Get OS information using nmap."""
+    nm = nmap.PortScanner()
+    nm.scan(ip, arguments='-O')  # Use -O for OS detection
+    
+    # Check if 'osclass' or 'osmatch' exists and has content
+    if 'osclass' in nm[ip] and nm[ip]['osclass']:
+        os_info = nm[ip]['osclass'][0]['osfamily']
+        return os_info
+    elif 'osmatch' in nm[ip] and nm[ip]['osmatch']:
+        os_info = nm[ip]['osmatch'][0]['name']
+        return os_info
+    
+    return "Unknown"  # Default return if no OS information is found
+
 if __name__ == "__main__":
     # Create an argument parser
     parser = argparse.ArgumentParser(description="Network Scanner")
@@ -48,11 +63,8 @@ if __name__ == "__main__":
     # Perform network scanning
     scan_results = scan_network(target_ip)
 
-    # Print OS version and scan results
-    os_info = platform.platform()  # Get OS information
-    print(f"Operating System: {os_info}\n")
-    
-    print("IP\t\tMAC Address\tVendor")
+    # Print the scan results
+    print("IP\t\tMAC Address\tVendor\t\tOS")
     print("-----------------------------------------")
     
     for client in scan_results:
@@ -61,4 +73,7 @@ if __name__ == "__main__":
             vendor = get_mac_vendor(mac_address)
         else:
             vendor = ""
-        print(f"{client['ip']}\t{mac_address}\t{vendor}")
+        
+        os_info = get_os_info(client["ip"])  # Get OS information for each device
+        
+        print(f"{client['ip']}\t{mac_address}\t{vendor}\t{os_info}")
